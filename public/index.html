@@ -7,6 +7,8 @@
 
   <!-- Icons & Chart.js -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ff4081">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
@@ -202,6 +204,9 @@
         <div>
           <h1 style="margin:0">Simulação — Plataforma de Serviços para Crianças</h1>
           <div class="muted">Escolha um perfil para entrar no ambiente simulado (sem autenticação)</div>
+        </div>
+        <div>
+          <button id="btnInstall" class="btn" style="display:none;">Instalar App</button>
         </div>
       </div>
 
@@ -1116,6 +1121,42 @@
     function toggleNavbar(show) {
       document.getElementById('main-navbar').style.display = show ? 'flex' : 'none';
       document.getElementById('navbar-space').style.display = show ? 'block' : 'none';
+    }
+    
+    // PWA install flow
+    let deferredPrompt = null;
+    const btnInstall = document.getElementById('btnInstall');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // show install button on home
+      if(document.getElementById('home-screen') && document.getElementById('home-screen').style.display !== 'none') {
+        btnInstall.style.display = 'inline-block';
+      }
+    });
+    
+    // When home is shown, show/hide install button accordingly
+    function updateInstallButtonVisibility() {
+      if(!deferredPrompt) { btnInstall.style.display = 'none'; return; }
+      const isHome = !location.hash || location.hash === '';
+      btnInstall.style.display = isHome ? 'inline-block' : 'none';
+    }
+    
+    // click handler to prompt installation
+    btnInstall.addEventListener('click', async () => {
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      // hide the button after choice
+      btnInstall.style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    // register service worker
+    if('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW register failed', err));
+      });
     }
     // Exibe navbar apenas na home
     document.getElementById('home-screen').style.display = 'block';
