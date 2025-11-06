@@ -7,7 +7,7 @@
 
   <!-- Icons & Chart.js -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ff4081">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
@@ -1121,17 +1121,23 @@
     function toggleNavbar(show) {
       document.getElementById('main-navbar').style.display = show ? 'flex' : 'none';
       document.getElementById('navbar-space').style.display = show ? 'block' : 'none';
+      // atualiza visibilidade do botão de instalação quando o estado muda
+      try{ if(typeof updateInstallButtonVisibility === 'function') updateInstallButtonVisibility(); }catch(e){/*ignore*/}
     }
     
     // PWA install flow
     let deferredPrompt = null;
     const btnInstall = document.getElementById('btnInstall');
     window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt event fired', e);
       e.preventDefault();
       deferredPrompt = e;
       // show install button on home
       if(document.getElementById('home-screen') && document.getElementById('home-screen').style.display !== 'none') {
+        console.log('Showing install button (home visible)');
         btnInstall.style.display = 'inline-block';
+      } else {
+        console.log('Install prompt available but home not visible');
       }
     });
     
@@ -1144,9 +1150,11 @@
     
     // click handler to prompt installation
     btnInstall.addEventListener('click', async () => {
-      if(!deferredPrompt) return;
+      if(!deferredPrompt) { console.log('No deferredPrompt available'); return; }
+      console.log('Triggering PWA prompt');
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
+      console.log('User choice', choice);
       // hide the button after choice
       btnInstall.style.display = 'none';
       deferredPrompt = null;
@@ -1155,7 +1163,7 @@
     // register service worker
     if('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW register failed', err));
+        navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered', reg)).catch(err => console.warn('SW register failed', err));
       });
     }
     // Exibe navbar apenas na home
