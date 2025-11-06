@@ -180,6 +180,17 @@
         height:48px;
       }
     }
+    /* Mobile menu button and panel styles */
+    .mobile-menu-btn{display:none;align-items:center;justify-content:center;border-radius:8px;padding:6px;background:rgba(255,255,255,0.06);color:#fff;border:none}
+    /* mobile menu panel hidden by default; will reuse .sidebar for colors */
+    #mobile-menu{display:none;position:fixed;left:0;top:0;height:100vh;width:260px;transform:translateX(-100%);transition:transform .28s ease;z-index:1250;border-radius:0;padding-top:28px}
+    #mobile-menu.open{transform:translateX(0);display:block}
+    #mobile-menu .nav a{color:white}
+    #mobile-menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1200}
+    #mobile-menu-overlay.open{display:block}
+    @media(max-width:980px){
+      .mobile-menu-btn{display:inline-flex}
+    }
   </style>
 </head>
 <body>
@@ -196,6 +207,11 @@
     </div>
   </nav>
   <div id="navbar-space" style="height:56px"></div> <!-- Espaço para navbar -->
+
+  <!-- Mobile menu overlay & panel (hidden by default) -->
+  <div id="mobile-menu-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1200"></div>
+  <aside id="mobile-menu" class="sidebar" style="display:none;position:fixed;left:0;top:0;height:100vh;width:260px;transform:translateX(-100%);transition:transform .28s ease;z-index:1250;border-radius:0;padding-top:28px;">
+  </aside>
 
   <!-- HOME chooser -->
   <div id="home-screen" class="home-chooser" style="display:block;">
@@ -253,6 +269,9 @@
     <main class="content">
       <header class="top">
         <div class="title" id="page-title">Simulação Plataforma</div>
+          <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Abrir menu" title="Menu">
+            <span class="material-icons">menu</span>
+          </button>
         <div class="search-inline">
           <input id="globalSearch" placeholder="Pesquisar..." />
           <button class="btn" id="btnQuickSearch">Pesquisar</button>
@@ -679,6 +698,28 @@
       meta.className = 'meta';
       meta.innerHTML = `<div>Simulação • perfil: <strong>${role.toUpperCase()}</strong></div><small>Dados mock — sem autenticação</small>`;
       sb.appendChild(meta);
+
+      // Populate mobile menu panel (clone of sidebar) for small screens
+      try{
+        const mobileMenu = document.getElementById('mobile-menu');
+        if(mobileMenu){
+          mobileMenu.innerHTML = '';
+          const mBrand = brand.cloneNode(true);
+          mobileMenu.appendChild(mBrand);
+          // clone nav and attach
+          const mNav = nav.cloneNode(true);
+          mNav.className = 'nav';
+          mobileMenu.appendChild(mNav);
+          const mMeta = meta.cloneNode(true);
+          mobileMenu.appendChild(mMeta);
+          // wire mobile nav links: set hash and close menu
+          setTimeout(()=>{
+            mobileMenu.querySelectorAll('.nav a').forEach(a => {
+              a.addEventListener('click', function(e){ e.preventDefault(); location.hash = a.getAttribute('href'); toggleMobileMenu(false); });
+            });
+          }, 0);
+        }
+      }catch(e){console.warn('mobile menu build failed', e)}
 
       // back home
       document.getElementById('btnBackHome').onclick = () => {
@@ -1124,6 +1165,26 @@
       // atualiza visibilidade do botão de instalação quando o estado muda
       try{ if(typeof updateInstallButtonVisibility === 'function') updateInstallButtonVisibility(); }catch(e){/*ignore*/}
     }
+    
+    // Mobile menu toggle (slide-in panel)
+    function toggleMobileMenu(open){
+      const panel = document.getElementById('mobile-menu');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      if(!panel || !overlay) return;
+      if(open){
+        panel.classList.add('open'); overlay.classList.add('open'); document.body.style.overflow = 'hidden';
+      } else {
+        panel.classList.remove('open'); overlay.classList.remove('open'); document.body.style.overflow = '';
+      }
+    }
+
+    // wire mobile menu button and overlay
+    try{
+      const mmBtn = document.getElementById('mobile-menu-btn');
+      const mmOverlay = document.getElementById('mobile-menu-overlay');
+      if(mmBtn) mmBtn.addEventListener('click', ()=> toggleMobileMenu(true));
+      if(mmOverlay) mmOverlay.addEventListener('click', ()=> toggleMobileMenu(false));
+    }catch(e){console.warn('mobile menu listeners failed', e)}
     
     // PWA install flow
     let deferredPrompt = null;
