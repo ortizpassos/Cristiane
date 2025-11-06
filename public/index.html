@@ -1204,22 +1204,48 @@
     
     // When home is shown, show/hide install button accordingly
     function updateInstallButtonVisibility() {
-      if(!deferredPrompt) { btnInstall.style.display = 'none'; return; }
       const isHome = !location.hash || location.hash === '';
-      btnInstall.style.display = isHome ? 'inline-block' : 'none';
+      const isAndroid = /Android/i.test(navigator.userAgent || '');
+      // Show install button if we have the deferredPrompt OR as a fallback on Android browsers
+      if(deferredPrompt) {
+        btnInstall.style.display = isHome ? 'inline-block' : 'none';
+        return;
+      }
+      // fallback: show a helpful install button on Android that opens instructions
+      if(isAndroid && isHome) {
+        btnInstall.style.display = 'inline-block';
+        btnInstall.dataset.fallback = '1';
+        return;
+      }
+      btnInstall.style.display = 'none';
     }
     
     // click handler to prompt installation
     btnInstall.addEventListener('click', async () => {
-      if(!deferredPrompt) { console.log('No deferredPrompt available'); return; }
-      console.log('Triggering PWA prompt');
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      console.log('User choice', choice);
-      // hide the button after choice
-      btnInstall.style.display = 'none';
-      deferredPrompt = null;
+      // If we have the install prompt event available, use it (Chrome standard)
+      if(deferredPrompt) {
+        console.log('Triggering PWA prompt');
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        console.log('User choice', choice);
+        // hide after choice
+        btnInstall.style.display = 'none';
+        deferredPrompt = null;
+        return;
+      }
+      // Fallback for Android browsers: show quick instructions to the user
+      if(btnInstall.dataset && btnInstall.dataset.fallback === '1') {
+        showInstallInstructions();
+        return;
+      }
+      console.log('No deferredPrompt available and not on Android fallback');
     });
+
+    // Show a simple dialog with steps to add to home screen (fallback)
+    function showInstallInstructions(){
+      const html = `<div style="max-width:360px"><p>Se o seu navegador não exibiu o pedido automático, você pode instalar manualmente usando o menu do Chrome:</p><ol><li>Abrir o menu (⋮) no canto superior direito do Chrome.</li><li>Selecionar "Adicionar à tela inicial" (ou "Add to Home screen").</li><li>Confirmar o nome e tocar em "Adicionar".</li></ol><p>Se quiser, atualize a página e tente novamente.</p><div style="margin-top:12px"><button class="btn" onclick="closeDialog()">Fechar</button></div></div>`;
+      showDialog('Instalar App — instruções', html);
+    }
 
     // register service worker
     if('serviceWorker' in navigator) {
