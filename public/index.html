@@ -11,9 +11,11 @@
 
   <style>
     :root{
-      --primary:#3f51b5;
+      /* Palette: degradê entre rosa e azul claro */
+      --primary:#ff4081; /* rosa */
+      --primary-dark:#81d4fa; /* azul claro */
       --primary-contrast:#fff;
-      --bg:#f5f7fb;
+      --bg: linear-gradient(180deg,#ffd6e7,#e3f2fd); /* fundo degradê rosa -> azul claro */
       --card:#fff;
       --muted:#667085;
       --success:#4caf50;
@@ -52,7 +54,7 @@
     .role-card p{margin:0;color:var(--muted)}
 
     /* SIDEBAR */
-    .sidebar{width:260px;background:linear-gradient(180deg,var(--primary),#3142a6);color:white;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .sidebar{width:260px;background:linear-gradient(180deg,var(--primary),var(--primary-dark));color:white;padding:18px;display:flex;flex-direction:column;gap:12px}
     .brand{font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:10px}
     .brand .material-icons{background:rgba(255,255,255,0.12);padding:6px;border-radius:8px}
     .nav{margin-top:6px;display:flex;flex-direction:column;gap:6px}
@@ -180,10 +182,10 @@
 </head>
 <body>
   <!-- NAVBAR -->
-  <nav id="main-navbar" style="width:100%;background:#3f51b5;color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;height:56px;z-index:1000;box-shadow:0 2px 8px rgba(63,81,181,0.08)">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="material-icons" style="font-size:28px;">child_care</span>
-      <span style="font-weight:600;font-size:1.15rem;letter-spacing:1px">Plataforma Professora</span>
+  <nav id="main-navbar" style="width:100%;background:linear-gradient(90deg,var(--primary),var(--primary-dark));color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;height:56px;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <div style="display:flex;align-items:center;gap:12px">
+  <span class="material-icons" style="font-size:28px;">diversity_3</span>
+      <span style="font-weight:600;font-size:1.15rem;letter-spacing:1px">CGR Teacher</span>
     </div>
     <div style="display:flex;gap:24px;font-size:1rem">
       <a href="#" style="color:#fff;text-decoration:none;font-weight:500;">Home</a>
@@ -485,6 +487,26 @@
     const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
     const money = n => 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 
+    // helper: converte hex CSS var para rgba
+    function hexToRgba(hex, alpha){
+      try{
+        hex = hex.trim();
+        if(hex.startsWith('var(')){
+          // resolve var(--primary)
+          const name = hex.replace(/var\(|\)/g,'').trim();
+          hex = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+        if(hex.indexOf('#')===0) hex = hex.substring(1);
+        if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+        const r = parseInt(hex.substring(0,2),16);
+        const g = parseInt(hex.substring(2,4),16);
+        const b = parseInt(hex.substring(4,6),16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }catch(e){
+        return `rgba(255,64,129,${alpha})`; // fallback rosa
+      }
+    }
+
     function seedMockData() {
       MOCK.users = [
         { id:1, name:'Carlos Souza', email:'carlos@exemplo.com', type:'PARENT', active:true },
@@ -499,7 +521,7 @@
       ];
 
       const tpls = [
-        { name:'Mariana Souza', bio:'Especialista em alfabetização infantil com 8 anos.', ageRange:'4-8', rating:4.8, img:'https://i.pravatar.cc/150?img=5' },
+        { name:'Cristiane Weber', bio:'Especialista em alfabetização infantil com 8 anos.', ageRange:'4-8', rating:4.8, img:'https://i.pravatar.cc/150?img=5' },
         { name:'Ana Clara', bio:'Professora de reforço e acompanhamento pedagógico.', ageRange:'6-12', rating:4.6, img:'https://i.pravatar.cc/150?img=9' },
         { name:'Patrícia Lima', bio:'Cuidadora e educadora infantil (formada em pedagogia).', ageRange:'2-6', rating:4.9, img:'https://i.pravatar.cc/150?img=16' },
         { name:'Joana Almeida', bio:'Atividades lúdicas e alfabetização inicial.', ageRange:'3-7', rating:4.7, img:'https://i.pravatar.cc/150?img=10' },
@@ -598,8 +620,8 @@
       const sb = document.getElementById('sidebar');
       sb.innerHTML = '';
       const brand = document.createElement('div');
-      brand.className = 'brand';
-      brand.innerHTML = `<span class="material-icons">child_care</span> Plataforma Professora`;
+  brand.className = 'brand';
+  brand.innerHTML = `<span class="material-icons">diversity_3</span> CGR Teacher`;
       sb.appendChild(brand);
       brand.style.cursor = 'pointer';
       brand.onclick = function() {
@@ -762,9 +784,15 @@
       }
       const ctx = document.getElementById('chartBookingsAdmin').getContext('2d');
       if(chartAdmin) chartAdmin.destroy();
+      // use theme colors (primary and primary-dark) and create a gradient fill
+      const primaryVar = (getComputedStyle(document.documentElement).getPropertyValue('--primary') || '#ff4081').trim();
+      const primaryDarkVar = (getComputedStyle(document.documentElement).getPropertyValue('--primary-dark') || '#81d4fa').trim();
+      const grad = ctx.createLinearGradient(0,0,0,200);
+      grad.addColorStop(0, hexToRgba(primaryDarkVar, 0.18));
+      grad.addColorStop(1, hexToRgba(primaryVar, 0.06));
       chartAdmin = new Chart(ctx, {
         type:'line',
-        data:{ labels, datasets:[{ label:'Agendamentos', data, tension:0.3, fill:true, backgroundColor:'rgba(63,81,181,0.12)', borderColor:'rgba(63,81,181,0.9)', pointRadius:2 }]},
+        data:{ labels, datasets:[{ label:'Agendamentos', data, tension:0.3, fill:true, backgroundColor: grad, borderColor: hexToRgba(primaryVar, 0.95), pointBackgroundColor: hexToRgba(primaryDarkVar, 1), pointBorderColor: hexToRgba(primaryVar, 1), pointRadius:3 }]},
         options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false}}, y:{beginAtZero:true, ticks:{precision:0}}}}
       });
     }
