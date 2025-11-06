@@ -112,6 +112,70 @@
       .grid-2{grid-template-columns:1fr}
       .grid-3{grid-template-columns:1fr}
     }
+    @media(max-width:600px){
+      #main-navbar {
+        flex-direction:column;
+        height:auto;
+        padding:0 12px;
+        align-items:flex-start;
+      }
+      #main-navbar > div {
+        flex-direction:row;
+        gap:8px;
+        font-size:1rem;
+      }
+      #main-navbar a {
+        font-size:0.95rem;
+        padding:6px 0;
+        display:inline-block;
+      }
+      .home-chooser {
+        padding:8px;
+        height:calc(100vh - 48px);
+      }
+      .chooser-card {
+        padding:16px;
+        max-width:100%;
+        border-radius:8px;
+      }
+      .chooser-grid {
+        flex-direction:column;
+        gap:8px;
+      }
+      .role-card {
+        min-width:0;
+        padding:12px;
+        font-size:0.98rem;
+      }
+      .content {
+        padding:10px 6px;
+      }
+      .card {
+        padding:10px;
+        border-radius:8px;
+      }
+      header.top {
+        flex-direction:column;
+        gap:6px;
+        align-items:flex-start;
+      }
+      .search-inline input {
+        min-width:120px;
+        font-size:0.95rem;
+      }
+      .btn, .btn.ghost {
+        padding:7px 10px;
+        font-size:0.95rem;
+      }
+      table th, table td {
+        padding:6px;
+        font-size:0.92rem;
+      }
+      .teacher-item img {
+        width:48px;
+        height:48px;
+      }
+    }
   </style>
 </head>
 <body>
